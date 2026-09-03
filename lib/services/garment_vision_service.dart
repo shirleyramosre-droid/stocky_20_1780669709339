@@ -88,7 +88,15 @@ class GarmentVisionService {
             ],
           },
         ],
-        parameters: {'max_tokens': 800, 'temperature': 0.1},
+        parameters: {
+          'max_tokens': 800,
+          'temperature': 0.1,
+          // gemini-2.5-flash has dynamic "thinking" enabled by default, and
+          // thinking tokens share the same max_tokens budget as the visible
+          // output — without this, low/medium budgets can be fully consumed
+          // by reasoning, leaving no tokens for the actual JSON response.
+          'reasoning_effort': 'none',
+        },
       );
 
       debugPrint('[AI_TAGS] Gemini response keys: ${response.keys.toList()}');

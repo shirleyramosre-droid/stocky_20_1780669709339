@@ -30,6 +30,10 @@ function sendError(stream, errorResponse) {
 }
 
 const handlerLogic = async (event, responseStream, context) => {
+  // Declared outside the try block so the outer catch (which formats error
+  // responses using the provider name) can still read it if an exception is
+  // thrown before or between the inner try/catch blocks.
+  let provider;
   const awslambda = globalThis.awslambda || global.awslambda;
 
   if (!awslambda || !awslambda.HttpResponseStream) {
@@ -94,7 +98,8 @@ const handlerLogic = async (event, responseStream, context) => {
   }
 
   try {
-    const { messages, model, provider } = body;
+    const { messages, model } = body;
+    provider = body.provider;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       const errorResponse = {

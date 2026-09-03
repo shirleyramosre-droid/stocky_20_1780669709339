@@ -103,7 +103,7 @@ class _ExistingProductSearchWidgetState
     setState(() => _isRecognizing = true);
 
     try {
-      // Use Gemini via GarmentVisionService — returns top 5 matches
+      // Use Gemini via GarmentVisionService — returns top 3 matches
       final matches = await GarmentVisionService.instance.findTopMatches(
         imageBytes,
       );

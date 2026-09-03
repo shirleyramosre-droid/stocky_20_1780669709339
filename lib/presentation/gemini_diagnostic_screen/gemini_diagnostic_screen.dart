@@ -46,7 +46,9 @@ class _GeminiDiagnosticScreenState extends State<GeminiDiagnosticScreen> {
         [
           {'role': 'user', 'content': 'Responde únicamente con la palabra: OK'},
         ],
-        parameters: {'max_tokens': 10},
+        // reasoning_effort disables gemini-2.5-flash's default "thinking",
+        // which otherwise eats into max_tokens and starves the visible reply.
+        parameters: {'max_tokens': 10, 'reasoning_effort': 'none'},
       );
 
       stopwatch.stop();
