@@ -89,14 +89,16 @@ class GarmentVisionService {
           },
         ],
         parameters: {
-          'max_tokens': 1500,
+          // reasoning_effort is intentionally omitted: the deployed Lambda
+          // (managed by Rocket, not this repo) forwards it to the SDK as-is
+          // and gemini-3.6-flash rejects it with a hard 400
+          // (UnsupportedParamsError) unless the Lambda opts into
+          // drop_params — which we can't guarantee is deployed. max_tokens
+          // is raised well past the visible output size to leave headroom
+          // for gemini-3.6-flash's default (non-configurable, from here)
+          // thinking-token consumption.
+          'max_tokens': 2000,
           'temperature': 0.1,
-          // gemini-3.6-flash always reasons — thinking can't be fully
-          // disabled, only dialed down — and thinking tokens share the same
-          // max_tokens budget as the visible output. 'minimal' keeps that
-          // consumption as low as possible; max_tokens was raised from 800
-          // to leave headroom for whatever minimal thinking still uses.
-          'reasoning_effort': 'minimal',
         },
       );
 

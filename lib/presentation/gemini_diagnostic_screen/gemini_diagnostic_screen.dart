@@ -46,9 +46,10 @@ class _GeminiDiagnosticScreenState extends State<GeminiDiagnosticScreen> {
         [
           {'role': 'user', 'content': 'Responde únicamente con la palabra: OK'},
         ],
-        // gemini-3.6-flash can't fully disable thinking — 'minimal' is the
-        // lowest level — so max_tokens needs headroom beyond just "OK".
-        parameters: {'max_tokens': 50, 'reasoning_effort': 'minimal'},
+        // reasoning_effort omitted — the deployed Lambda may not have
+        // drop_params, and gemini-3.6-flash 400s on unsupported params.
+        // max_tokens leaves headroom for default thinking-token usage.
+        parameters: {'max_tokens': 100},
       );
 
       stopwatch.stop();
