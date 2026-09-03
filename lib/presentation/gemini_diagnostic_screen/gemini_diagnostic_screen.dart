@@ -42,13 +42,13 @@ class _GeminiDiagnosticScreenState extends State<GeminiDiagnosticScreen> {
     try {
       final response = await getChatCompletion(
         'GEMINI',
-        'gemini/gemini-2.5-flash',
+        'gemini/gemini-3.6-flash',
         [
           {'role': 'user', 'content': 'Responde únicamente con la palabra: OK'},
         ],
-        // reasoning_effort disables gemini-2.5-flash's default "thinking",
-        // which otherwise eats into max_tokens and starves the visible reply.
-        parameters: {'max_tokens': 10, 'reasoning_effort': 'none'},
+        // gemini-3.6-flash can't fully disable thinking — 'minimal' is the
+        // lowest level — so max_tokens needs headroom beyond just "OK".
+        parameters: {'max_tokens': 50, 'reasoning_effort': 'minimal'},
       );
 
       stopwatch.stop();
@@ -191,7 +191,7 @@ class _GeminiDiagnosticScreenState extends State<GeminiDiagnosticScreen> {
                   ),
                   const SizedBox(height: 8),
                   _InfoRow(label: 'Proveedor', value: 'GEMINI'),
-                  _InfoRow(label: 'Modelo', value: 'gemini/gemini-2.5-flash'),
+                  _InfoRow(label: 'Modelo', value: 'gemini/gemini-3.6-flash'),
                   _InfoRow(
                     label: 'Lambda URL',
                     value: _lambdaUrl.isNotEmpty
@@ -396,7 +396,7 @@ class _GeminiDiagnosticScreenState extends State<GeminiDiagnosticScreen> {
                       _TipRow(
                         number: '4',
                         text:
-                            'El modelo gemini/gemini-2.5-flash no está disponible '
+                            'El modelo gemini/gemini-3.6-flash no está disponible '
                             'para tu API Key. Verifica los permisos en Google AI Studio.',
                       ),
                     ],

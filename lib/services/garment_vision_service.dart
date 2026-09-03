@@ -70,7 +70,7 @@ class GarmentVisionService {
 
       final response = await getChatCompletion(
         'GEMINI',
-        'gemini/gemini-2.5-flash',
+        'gemini/gemini-3.6-flash',
         [
           {'role': 'system', 'content': _systemPrompt},
           {
@@ -89,13 +89,14 @@ class GarmentVisionService {
           },
         ],
         parameters: {
-          'max_tokens': 800,
+          'max_tokens': 1500,
           'temperature': 0.1,
-          // gemini-2.5-flash has dynamic "thinking" enabled by default, and
-          // thinking tokens share the same max_tokens budget as the visible
-          // output — without this, low/medium budgets can be fully consumed
-          // by reasoning, leaving no tokens for the actual JSON response.
-          'reasoning_effort': 'none',
+          // gemini-3.6-flash always reasons — thinking can't be fully
+          // disabled, only dialed down — and thinking tokens share the same
+          // max_tokens budget as the visible output. 'minimal' keeps that
+          // consumption as low as possible; max_tokens was raised from 800
+          // to leave headroom for whatever minimal thinking still uses.
+          'reasoning_effort': 'minimal',
         },
       );
 
