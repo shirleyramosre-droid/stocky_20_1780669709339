@@ -151,6 +151,10 @@ const handlerLogic = async (event, responseStream, context) => {
           messages,
           api_key: apiKey,
           stream: true,
+          // Silently drop params a given model/provider doesn't support
+          // (e.g. reasoning_effort on models the SDK's registry hasn't
+          // caught up with yet) instead of throwing UnsupportedParamsError.
+          drop_params: true,
           ...(body.parameters || {}),
         });
 
@@ -179,6 +183,8 @@ const handlerLogic = async (event, responseStream, context) => {
           messages,
           api_key: apiKey,
           stream: false,
+          // See comment on the streaming branch above.
+          drop_params: true,
           ...(body.parameters || {}),
         });
 
