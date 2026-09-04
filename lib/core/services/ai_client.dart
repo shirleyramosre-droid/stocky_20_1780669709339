@@ -1,6 +1,16 @@
 import 'package:dio/dio.dart';
 
-final Dio _dio = Dio();
+// Without explicit timeouts, Dio waits indefinitely on a stalled connection
+// (e.g. network handoff while the camera/cropper activity is in the
+// foreground), which surfaces as an infinite loading spinner instead of an
+// error the user can retry from.
+final Dio _dio = Dio(
+  BaseOptions(
+    connectTimeout: const Duration(seconds: 15),
+    sendTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(seconds: 45),
+  ),
+);
 
 Future<Map<String, dynamic>> callLambdaFunction(
   String endpoint,
@@ -24,6 +34,13 @@ Future<Map<String, dynamic>> callLambdaFunction(
       }
     }
     print('Lambda function error: $error');
+    if (error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.sendTimeout ||
+        error.type == DioExceptionType.receiveTimeout) {
+      throw Exception(
+        'Tiempo de espera agotado al contactar el servicio de IA. Intenta nuevamente.',
+      );
+    }
     rethrow;
   }
 }

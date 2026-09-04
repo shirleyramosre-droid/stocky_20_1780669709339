@@ -67,7 +67,13 @@ Future<void> getStreamingChatCompletion(
   };
 
   try {
-    final dio = Dio();
+    final dio = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 15),
+        sendTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 45),
+      ),
+    );
     final response = await dio.post<ResponseBody>(
       _chatCompletionEndpoint,
       data: payload,
