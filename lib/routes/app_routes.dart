@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../presentation/api_settings_screen/api_settings_screen.dart';
 import '../presentation/configure_category_screen/configure_category_screen.dart';
 import '../presentation/existing_product_entry_screen/existing_product_entry_screen.dart';
 import '../presentation/gemini_diagnostic_screen/gemini_diagnostic_screen.dart';
@@ -24,6 +25,7 @@ class AppRoutes {
   static const String configureCategoryScreen = '/configure-category-screen';
   static const String stockAlertsScreen = '/stock-alerts-screen';
   static const String geminiDiagnosticScreen = '/gemini-diagnostic-screen';
+  static const String apiSettingsScreen = '/api-settings-screen';
 
   static Map<String, WidgetBuilder> routes = {
     initial: (context) => const HomeScreen(),
@@ -37,5 +39,6 @@ class AppRoutes {
     configureCategoryScreen: (context) => const ConfigureCategoryScreen(),
     stockAlertsScreen: (context) => const StockAlertsScreen(),
     geminiDiagnosticScreen: (context) => const GeminiDiagnosticScreen(),
+    apiSettingsScreen: (context) => const ApiSettingsScreen(),
   };
 }

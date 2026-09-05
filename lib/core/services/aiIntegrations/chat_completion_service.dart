@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../ai_client.dart';
+import '../../../services/gemini_api_key_service.dart';
+import 'gemini_direct_service.dart';
 
 // Load Lambda URL from compile-time environment variable (same pattern as SUPABASE_URL)
 const String _chatCompletionEndpoint = String.fromEnvironment(
@@ -27,6 +29,21 @@ Future<Map<String, dynamic>> getChatCompletion(
   List<Map<String, dynamic>> messages, {
   Map<String, dynamic> parameters = const {},
 }) async {
+  // If the user registered their own Gemini API key in Configuración,
+  // call Gemini directly and skip the Rocket-managed Lambda entirely —
+  // this is unaffected by Rocket's Connectors setup or auto-sync reverts.
+  if (provider == 'GEMINI') {
+    final userApiKey = await GeminiApiKeyService.instance.getApiKey();
+    if (userApiKey != null) {
+      return await callGeminiDirect(
+        apiKey: userApiKey,
+        model: model,
+        messages: messages,
+        parameters: parameters,
+      );
+    }
+  }
+
   if (_chatCompletionEndpoint.isEmpty) {
     throw Exception(
       'Lambda endpoint no configurado. Verifica AWS_LAMBDA_CHAT_COMPLETION_URL en env.json.',

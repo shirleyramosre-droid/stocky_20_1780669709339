@@ -131,6 +131,12 @@ class AppNavigationDrawer extends StatelessWidget {
                   route: AppRoutes.geminiDiagnosticScreen,
                   isActive: activeRoute == AppRoutes.geminiDiagnosticScreen,
                 ),
+                _DrawerItem(
+                  icon: Icons.vpn_key_rounded,
+                  label: 'Configuración de API',
+                  route: AppRoutes.apiSettingsScreen,
+                  isActive: activeRoute == AppRoutes.apiSettingsScreen,
+                ),
               ],
             ),
           ),

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/services/aiIntegrations/chat_completion_service.dart';
+import '../../services/gemini_api_key_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_navigation_drawer.dart';
 import '../../routes/app_routes.dart';
@@ -27,10 +28,22 @@ class _GeminiDiagnosticScreenState extends State<GeminiDiagnosticScreen> {
     'AWS_LAMBDA_CHAT_COMPLETION_URL',
   );
 
+  bool _usingOwnKey = false;
+
+  @override
+  void initState() {
+    super.initState();
+    GeminiApiKeyService.instance.getApiKey().then((key) {
+      if (mounted) setState(() => _usingOwnKey = key != null);
+    });
+  }
+
   Future<void> _runTest() async {
     setState(() {
       _status = _TestStatus.running;
-      _statusMessage = 'Enviando solicitud a Lambda…';
+      _statusMessage = _usingOwnKey
+          ? 'Enviando solicitud directa a Gemini…'
+          : 'Enviando solicitud a Lambda…';
       _rawResponse = '';
       _extractedContent = '';
       _errorDetail = '';
@@ -73,13 +86,24 @@ class _GeminiDiagnosticScreenState extends State<GeminiDiagnosticScreen> {
         return;
       }
 
-      // Extract content
+      // Extract content — handle both the Lambda's OpenAI-style shape and
+      // Gemini's native "candidates" shape (used when calling Gemini directly).
       String content = '';
       final choices = response['choices'];
       if (choices is List && choices.isNotEmpty) {
         final msg = choices[0]?['message'];
         final raw = msg?['content'];
         if (raw is String) content = raw;
+      }
+      if (content.isEmpty) {
+        final candidates = response['candidates'];
+        if (candidates is List && candidates.isNotEmpty) {
+          final parts = candidates[0]?['content']?['parts'];
+          if (parts is List && parts.isNotEmpty) {
+            final text = parts[0]?['text'];
+            if (text is String) content = text;
+          }
+        }
       }
 
       setState(() {
@@ -194,12 +218,22 @@ class _GeminiDiagnosticScreenState extends State<GeminiDiagnosticScreen> {
                   _InfoRow(label: 'Proveedor', value: 'GEMINI'),
                   _InfoRow(label: 'Modelo', value: 'gemini/gemini-3.6-flash'),
                   _InfoRow(
-                    label: 'Lambda URL',
-                    value: _lambdaUrl.isNotEmpty
-                        ? '${_lambdaUrl.substring(0, _lambdaUrl.length.clamp(0, 40))}…'
-                        : '⚠️ NO CONFIGURADA',
-                    valueColor: _lambdaUrl.isEmpty ? AppTheme.cancelRed : null,
+                    label: 'Conexión',
+                    value: _usingOwnKey
+                        ? 'Directa (tu API Key personal)'
+                        : 'Vía Lambda de Rocket',
+                    valueColor: _usingOwnKey ? const Color(0xFF22C55E) : null,
                   ),
+                  if (!_usingOwnKey)
+                    _InfoRow(
+                      label: 'Lambda URL',
+                      value: _lambdaUrl.isNotEmpty
+                          ? '${_lambdaUrl.substring(0, _lambdaUrl.length.clamp(0, 40))}…'
+                          : '⚠️ NO CONFIGURADA',
+                      valueColor: _lambdaUrl.isEmpty
+                          ? AppTheme.cancelRed
+                          : null,
+                    ),
                 ],
               ),
             ),
