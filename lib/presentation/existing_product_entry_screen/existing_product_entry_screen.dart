@@ -1,6 +1,7 @@
 import '../../core/app_export.dart';
 import '../../services/app_state_notifier.dart';
 import '../../services/supabase_service.dart';
+import '../../utils/product_grouping.dart';
 import '../../widgets/app_navigation_drawer.dart';
 import './widgets/existing_product_results_widget.dart';
 import './widgets/existing_product_search_widget.dart';
@@ -79,7 +80,12 @@ class _ExistingProductEntryScreenState
   }
 
   void _onProductSelected(Map<String, dynamic> product) {
-    setState(() => _selectedProduct = product);
+    // Prefer the normalized copy from the loaded list (same id) when present.
+    final id = product['id']?.toString();
+    final fromList = _allProducts.where((p) => p['id']?.toString() == id);
+    setState(
+      () => _selectedProduct = fromList.isNotEmpty ? fromList.first : product,
+    );
   }
 
   void _onClearSelection() {
@@ -103,6 +109,7 @@ class _ExistingProductEntryScreenState
         child: _selectedProduct != null
             ? ExistingProductUpdateFormWidget(
                 product: _selectedProduct!,
+                variants: siblingVariants(_allProducts, _selectedProduct!),
                 onCancel: _onClearSelection,
                 onSaved: _onClearSelection,
               )

@@ -433,6 +433,11 @@ class SupabaseService {
     return LocalCacheService.instance.getSalesByDate(date);
   }
 
+  /// All locally cached sales (used for date-range reports).
+  Future<List<Map<String, dynamic>>> getAllSales() async {
+    return LocalCacheService.instance.getAllSales();
+  }
+
   // ─── DASHBOARD KPIs (offline-first) ────────────────────────────────────────
 
   Future<Map<String, dynamic>> getDashboardKpis() async {

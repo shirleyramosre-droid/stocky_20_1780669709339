@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../core/app_export.dart';
 import '../../../services/garment_vision_service.dart';
+import '../../../utils/product_grouping.dart';
 
 class ExistingProductSearchWidget extends StatefulWidget {
   final String searchQuery;
@@ -103,9 +104,17 @@ class _ExistingProductSearchWidgetState
     setState(() => _isRecognizing = true);
 
     try {
-      // Use Gemini via GarmentVisionService — returns top 3 matches
-      final matches = await GarmentVisionService.instance.findTopMatches(
+      // Ask for more candidates, then group by product name (sizes of the
+      // same product collapse into one entry) and keep the top 3 groups.
+      final rawMatches = await GarmentVisionService.instance.findTopMatches(
         imageBytes,
+        limit: 8,
+      );
+      final matches = groupBestByName<GarmentMatch>(
+        rawMatches,
+        nameOf: (m) => m.product['name'] as String?,
+        scoreOf: (m) => m.confidence,
+        limit: 3,
       );
 
       if (!mounted) return;
@@ -208,7 +217,6 @@ class _ExistingProductSearchWidgetState
                       final confidence = m.confidence * 100;
                       final reason = m.reason;
                       final imageUrl = (product['image_url'] as String?) ?? '';
-                      final stock = (product['stock'] as int?) ?? 0;
                       return GestureDetector(
                         onTap: () {
                           Navigator.pop(ctx);
@@ -307,17 +315,6 @@ class _ExistingProductSearchWidgetState
                                         fontWeight: FontWeight.w700,
                                         color: Colors.white,
                                       ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Stock: $stock',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: stock <= 3
-                                          ? AppTheme.cancelRed
-                                          : AppTheme.success,
-                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ],

@@ -2,6 +2,7 @@ import '../../core/app_export.dart';
 import '../../services/app_state_notifier.dart';
 import '../../services/supabase_service.dart';
 import '../../widgets/app_navigation_drawer.dart';
+import './sales_export_screen.dart';
 import './widgets/sales_history_kpi_widget.dart';
 import './widgets/sales_history_top_products_widget.dart';
 
@@ -196,6 +197,22 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
         ),
         const SizedBox(height: 12),
         _buildDateNav(),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SalesExportScreen()),
+          ),
+          icon: const Icon(Icons.download_rounded, size: 18),
+          label: const Text('Descargar lista'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppTheme.primary,
+            side: const BorderSide(color: AppTheme.primary),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+          ),
+        ),
       ],
     );
   }

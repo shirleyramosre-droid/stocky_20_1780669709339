@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 import '../core/services/aiIntegrations/chat_completion_service.dart';
+import '../core/services/aiIntegrations/gemini_model.dart';
 import '../services/supabase_service.dart';
 
 /// Result of a garment vision comparison.
@@ -70,7 +71,7 @@ class GarmentVisionService {
 
       final response = await getChatCompletion(
         'GEMINI',
-        'gemini/gemini-3.6-flash',
+        kGeminiModelId,
         [
           {'role': 'system', 'content': _systemPrompt},
           {
@@ -135,9 +136,12 @@ class GarmentVisionService {
 
   /// Analyses [imageBytes], extracts tags, then queries Supabase for products
   /// whose ai_tags column contains those tags (contains filter).
-  /// Returns up to 3 products ordered by number of matching tags (descending).
+  /// Returns up to [limit] (default 3) products ordered by number of matching tags (descending).
   /// Photos are NEVER saved.
-  Future<List<GarmentMatch>> findTopMatches(Uint8List imageBytes) async {
+  Future<List<GarmentMatch>> findTopMatches(
+    Uint8List imageBytes, {
+    int limit = 3,
+  }) async {
     debugPrint('[IMAGE_SEARCH] ══════════════════════════════════════════');
     debugPrint('[IMAGE_SEARCH] Imagen recibida (${imageBytes.length} bytes)');
 
@@ -155,7 +159,7 @@ class GarmentVisionService {
         debugPrint(
           '[IMAGE_SEARCH] ERROR B - Gemini respondió pero no pudo identificar el producto',
         );
-        return _fallbackMatches();
+        return _fallbackMatches(limit);
       }
 
       debugPrint('[IMAGE_SEARCH] Datos extraídos de Gemini: $tagsString');
@@ -174,7 +178,7 @@ class GarmentVisionService {
         debugPrint(
           '[IMAGE_SEARCH] ERROR B - No se pudieron extraer tags válidos',
         );
-        return _fallbackMatches();
+        return _fallbackMatches(limit);
       }
 
       // Step 2: Get all products from local cache
@@ -239,7 +243,7 @@ class GarmentVisionService {
 
       // Step 4: Sort by score descending, take top 3
       scored.sort((a, b) => b.score.compareTo(a.score));
-      final top3 = scored.take(3).toList();
+      final top3 = scored.take(limit).toList();
 
       debugPrint(
         '[IMAGE_SEARCH] Supabase query: búsqueda local por ai_tags + name + category',
@@ -262,7 +266,7 @@ class GarmentVisionService {
           'Verificar que los productos tengan ai_tags o que los nombres coincidan con: $searchTags',
         );
         // Fall back to returning top products by stock
-        return _fallbackMatches();
+        return _fallbackMatches(limit);
       }
 
       return top3.map((s) {
@@ -455,7 +459,7 @@ class GarmentVisionService {
     }
   }
 
-  Future<List<GarmentMatch>> _fallbackMatches() async {
+  Future<List<GarmentMatch>> _fallbackMatches(int limit) async {
     debugPrint('[IMAGE_SEARCH] Usando fallback: top 3 productos por stock');
     try {
       final allProducts = await SupabaseService.instance.getProducts();
@@ -466,7 +470,7 @@ class GarmentVisionService {
               ((b['stock'] as int?) ?? 0).compareTo((a['stock'] as int?) ?? 0),
         );
       return sorted
-          .take(3)
+          .take(limit)
           .map(
             (p) => GarmentMatch(
               product: p,

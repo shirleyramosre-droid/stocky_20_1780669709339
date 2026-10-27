@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/services/aiIntegrations/chat_completion_service.dart';
+import '../../core/services/aiIntegrations/gemini_model.dart';
 import '../../services/gemini_api_key_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_navigation_drawer.dart';
@@ -55,7 +56,7 @@ class _GeminiDiagnosticScreenState extends State<GeminiDiagnosticScreen> {
     try {
       final response = await getChatCompletion(
         'GEMINI',
-        'gemini/gemini-3.6-flash',
+        kGeminiModelId,
         [
           {'role': 'user', 'content': 'Responde únicamente con la palabra: OK'},
         ],
@@ -216,7 +217,7 @@ class _GeminiDiagnosticScreenState extends State<GeminiDiagnosticScreen> {
                   ),
                   const SizedBox(height: 8),
                   _InfoRow(label: 'Proveedor', value: 'GEMINI'),
-                  _InfoRow(label: 'Modelo', value: 'gemini/gemini-3.6-flash'),
+                  _InfoRow(label: 'Modelo', value: kGeminiModelId),
                   _InfoRow(
                     label: 'Conexión',
                     value: _usingOwnKey
@@ -431,7 +432,7 @@ class _GeminiDiagnosticScreenState extends State<GeminiDiagnosticScreen> {
                       _TipRow(
                         number: '4',
                         text:
-                            'El modelo gemini/gemini-3.6-flash no está disponible '
+                            'El modelo $kGeminiModelId no está disponible '
                             'para tu API Key. Verifica los permisos en Google AI Studio.',
                       ),
                     ],

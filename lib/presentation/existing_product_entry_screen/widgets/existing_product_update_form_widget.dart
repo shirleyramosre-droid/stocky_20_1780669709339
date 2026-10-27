@@ -5,12 +5,16 @@ import '../../../services/supabase_service.dart';
 
 class ExistingProductUpdateFormWidget extends StatefulWidget {
   final Map<String, dynamic> product;
+
+  /// All variants (sizes) registered under the same product name.
+  final List<Map<String, dynamic>> variants;
   final VoidCallback onCancel;
   final VoidCallback onSaved;
 
   const ExistingProductUpdateFormWidget({
     super.key,
     required this.product,
+    this.variants = const [],
     required this.onCancel,
     required this.onSaved,
   });
@@ -26,10 +30,27 @@ class _ExistingProductUpdateFormWidgetState
   late TextEditingController _additionalQtyController;
   int _additionalQuantity = 1;
   bool _isSaving = false;
+  late Map<String, dynamic> _current;
+
+  List<Map<String, dynamic>> get _variants {
+    final id = _current['id']?.toString();
+    if (widget.variants.any((v) => v['id']?.toString() == id)) {
+      return widget.variants;
+    }
+    return [_current, ...widget.variants];
+  }
+
+  void _onSizeChanged(String? id) {
+    if (id == null) return;
+    final match = _variants.where((v) => v['id']?.toString() == id);
+    if (match.isEmpty) return;
+    setState(() => _current = match.first);
+  }
 
   @override
   void initState() {
     super.initState();
+    _current = widget.product;
     _additionalQtyController = TextEditingController(text: '1');
   }
 
@@ -86,7 +107,7 @@ class _ExistingProductUpdateFormWidgetState
     final newUnitPrice = _additionalQuantity > 0
         ? totalPrice / _additionalQuantity
         : totalPrice;
-    final productId = widget.product['id']?.toString() ?? '';
+    final productId = _current['id']?.toString() ?? '';
 
     bool success = false;
     if (productId.isNotEmpty) {
@@ -249,15 +270,18 @@ class _ExistingProductUpdateFormWidgetState
   @override
   Widget build(BuildContext context) {
     final int currentQty =
-        (widget.product['stock'] as int?) ??
-        (widget.product['quantity'] as int?) ??
-        0;
+        (_current['stock'] as int?) ?? (_current['quantity'] as int?) ?? 0;
     final String imageUrl =
-        (widget.product['image_url'] as String?) ??
-        (widget.product['imageUrl'] as String?) ??
+        (_current['image_url'] as String?) ??
+        (_current['imageUrl'] as String?) ??
         '';
+    final double unitPurchasePrice =
+        ((_current['purchase_price'] as num?) ??
+                (_current['purchasePrice'] as num?) ??
+                0)
+            .toDouble();
     final String semanticLabel =
-        (widget.product['semanticLabel'] as String?) ?? 'Imagen del producto';
+        (_current['semanticLabel'] as String?) ?? 'Imagen del producto';
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -310,31 +334,33 @@ class _ExistingProductUpdateFormWidgetState
           // Product name (read-only)
           _FieldLabel('Nombre del Producto'),
           const SizedBox(height: 6),
-          _ReadOnlyField((widget.product['name'] as String?) ?? ''),
+          _ReadOnlyField((_current['name'] as String?) ?? ''),
 
           const SizedBox(height: 14),
 
-          // Talla (read-only, only if present)
-          Builder(
-            builder: (ctx) {
-              final String? size = widget.product['size'] as String?;
-              if (size == null || size.isEmpty) return const SizedBox.shrink();
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _FieldLabel('Talla'),
-                  const SizedBox(height: 6),
-                  _ReadOnlyField(size),
-                  const SizedBox(height: 14),
-                ],
+          // Talla: every size registered under the same product name
+          _FieldLabel('Talla'),
+          const SizedBox(height: 6),
+          DropdownButtonFormField<String>(
+            key: ValueKey('size-${_current['id']}'),
+            initialValue: _current['id']?.toString(),
+            isExpanded: true,
+            items: _variants.map((v) {
+              final size = ((v['size'] as String?) ?? '').trim();
+              return DropdownMenuItem<String>(
+                value: v['id']?.toString(),
+                child: Text(size.isEmpty ? 'Sin talla' : size),
               );
-            },
+            }).toList(),
+            onChanged: _isSaving ? null : _onSizeChanged,
           ),
+
+          const SizedBox(height: 14),
 
           // Category (read-only)
           _FieldLabel('Categoría'),
           const SizedBox(height: 6),
-          _ReadOnlyField((widget.product['category'] as String?) ?? ''),
+          _ReadOnlyField((_current['category'] as String?) ?? ''),
 
           const SizedBox(height: 14),
 
@@ -364,6 +390,13 @@ class _ExistingProductUpdateFormWidgetState
               ),
             ],
           ),
+
+          const SizedBox(height: 14),
+
+          // Unit purchase price (read-only, same source as product detail)
+          _FieldLabel('Precio de Compra Unitario'),
+          const SizedBox(height: 6),
+          _ReadOnlyField('S/ ${unitPurchasePrice.toStringAsFixed(2)}'),
 
           const SizedBox(height: 14),
 

@@ -125,18 +125,6 @@ class AppNavigationDrawer extends StatelessWidget {
                   route: AppRoutes.productCatalogScreen,
                   isActive: activeRoute == AppRoutes.productCatalogScreen,
                 ),
-                _DrawerItem(
-                  icon: Icons.biotech_rounded,
-                  label: 'Diagnóstico Gemini',
-                  route: AppRoutes.geminiDiagnosticScreen,
-                  isActive: activeRoute == AppRoutes.geminiDiagnosticScreen,
-                ),
-                _DrawerItem(
-                  icon: Icons.vpn_key_rounded,
-                  label: 'Configuración de API',
-                  route: AppRoutes.apiSettingsScreen,
-                  isActive: activeRoute == AppRoutes.apiSettingsScreen,
-                ),
               ],
             ),
           ),

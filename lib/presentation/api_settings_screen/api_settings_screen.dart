@@ -89,7 +89,9 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      drawer: const AppNavigationDrawer(activeRoute: AppRoutes.apiSettingsScreen),
+      drawer: const AppNavigationDrawer(
+        activeRoute: AppRoutes.apiSettingsScreen,
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -144,7 +146,10 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
                   TextField(
                     controller: _controller,
                     obscureText: _obscure,
-                    style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 13,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'API Key de Gemini',
                       hintText: 'AIza...',
@@ -179,7 +184,10 @@ class _ApiSettingsScreenState extends State<ApiSettingsScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          icon: const Icon(Icons.save_rounded, color: Colors.white),
+                          icon: const Icon(
+                            Icons.save_rounded,
+                            color: Colors.white,
+                          ),
                           label: const Text(
                             'Guardar',
                             style: TextStyle(
