@@ -8,6 +8,7 @@ import '../../../theme/app_theme.dart';
 import '../../../services/supabase_service.dart';
 import '../../../services/garment_vision_service.dart';
 import '../../../services/sync_service.dart';
+import '../../../utils/ai_error.dart';
 
 class NewProductFormWidget extends StatefulWidget {
   final dynamic capturedImageFile;
@@ -696,7 +697,7 @@ class _NewProductFormWidgetState extends State<NewProductFormWidget> {
       if (mounted) {
         setState(() {
           _isAnalyzingTags = false;
-          _aiTagsError = 'Error al analizar la imagen con IA';
+          _aiTagsError = describeAiError(e);
         });
       }
     }

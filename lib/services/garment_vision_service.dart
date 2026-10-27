@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../core/services/aiIntegrations/chat_completion_service.dart';
 import '../core/services/aiIntegrations/gemini_model.dart';
 import '../services/supabase_service.dart';
+import '../utils/ai_error.dart';
 
 /// Result of a garment vision comparison.
 class GarmentMatch {
@@ -69,39 +70,48 @@ class GarmentVisionService {
       debugPrint('[AI_TAGS] Imagen codificada en base64 correctamente');
       debugPrint('[AI_TAGS] Enviando imagen a Gemini...');
 
-      final response = await getChatCompletion(
-        'GEMINI',
-        kGeminiModelId,
-        [
-          {'role': 'system', 'content': _systemPrompt},
-          {
-            'role': 'user',
-            'content': [
-              {
-                'type': 'text',
-                'text':
-                    'Analiza esta imagen y devuelve el JSON con las características del artículo.',
-              },
-              {
-                'type': 'image_url',
-                'image_url': {'url': 'data:image/jpeg;base64,$base64Image'},
-              },
-            ],
+      final response = await retryTransient(() async {
+        final result = await getChatCompletion(
+          'GEMINI',
+          kGeminiModelId,
+          [
+            {'role': 'system', 'content': _systemPrompt},
+            {
+              'role': 'user',
+              'content': [
+                {
+                  'type': 'text',
+                  'text':
+                      'Analiza esta imagen y devuelve el JSON con las características del artículo.',
+                },
+                {
+                  'type': 'image_url',
+                  'image_url': {'url': 'data:image/jpeg;base64,$base64Image'},
+                },
+              ],
+            },
+          ],
+          parameters: {
+            // reasoning_effort is intentionally omitted: the deployed Lambda
+            // (managed by Rocket, not this repo) forwards it to the SDK as-is
+            // and gemini-3.6-flash rejects it with a hard 400
+            // (UnsupportedParamsError) unless the Lambda opts into
+            // drop_params — which we can't guarantee is deployed. max_tokens
+            // is raised well past the visible output size to leave headroom
+            // for gemini-3.6-flash's default (non-configurable, from here)
+            // thinking-token consumption.
+            'max_tokens': 2000,
+            'temperature': 0.1,
           },
-        ],
-        parameters: {
-          // reasoning_effort is intentionally omitted: the deployed Lambda
-          // (managed by Rocket, not this repo) forwards it to the SDK as-is
-          // and gemini-3.6-flash rejects it with a hard 400
-          // (UnsupportedParamsError) unless the Lambda opts into
-          // drop_params — which we can't guarantee is deployed. max_tokens
-          // is raised well past the visible output size to leave headroom
-          // for gemini-3.6-flash's default (non-configurable, from here)
-          // thinking-token consumption.
-          'max_tokens': 2000,
-          'temperature': 0.1,
-        },
-      );
+        );
+        if (result.containsKey('error')) {
+          final details = result['details']?.toString() ?? '';
+          throw Exception(
+            '${result['error']}${details.isNotEmpty ? ': $details' : ''}',
+          );
+        }
+        return result;
+      });
 
       debugPrint('[AI_TAGS] Gemini response keys: ${response.keys.toList()}');
 
